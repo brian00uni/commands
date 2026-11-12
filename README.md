@@ -1,108 +1,187 @@
-# CQM Prompt Studio
+# Prompt Studio
 
-CQM 상품 제작 Markdown을 기준으로 **Figma 링크와 작업 정보를 입력 → 전체 명령문 생성 → 복사하여 Codex·Kiro 등에 전달**하는 로컬 React 앱입니다. 이 앱 자체가 Figma에 접속하거나 상품 HTML을 생성하지는 않습니다.
+Markdown 제작 가이드와 작업별 입력값을 결합해 **Codex·Kiro 등에 붙여넣을 전체 명령문**을 만드는 React 앱입니다. 현재 v1.0.0은 **CQM 상품 제작**을 지원하며, 같은 버전의 기능 보강과 새로운 콘텐츠 유형 추가를 고려해 구성했습니다.
 
-## 설치와 실행
+## 문서 안내
 
-현재 개발 환경에서 Node.js **v24.15.0**, npm **11.12.1**의 기존 설치를 확인하고 사용했습니다. Node를 중복 설치하지 않았습니다. `.nvmrc`에 사용 버전을 기록했습니다.
+| 문서                                                        | 내용                                            |
+| ----------------------------------------------------------- | ----------------------------------------------- |
+| [사용 가이드](docs/guides/usage.md)                         | 입력 순서, VAR-00~09, 저장·복사, 원본 적용 기준 |
+| [대시보드 디자인](docs/design-system.md)                    | Mantis 참조 기준, 테마, 카드·메뉴·반응형        |
+| [구조와 개발 규칙](docs/architecture.md)                    | 폴더 역할, 의존 방향, 기존 구조에서의 변경      |
+| [기능 확장 가이드](docs/guides/extending.md)                | CQM에 필드 추가, 새로운 유형 추가, 문서 갱신    |
+| [변경 이력](CHANGELOG.md)                                   | 현재 버전에서 반영한 변경과 호환성              |
+| [설계 근거와 확장 아이디어](docs/planning/product-notes.md) | 초기 설계 분석 및 향후 제안 12개                |
+
+## 기술 스택
+
+| 분류        | 사용 기술                 | 역할                            |
+| ----------- | ------------------------- | ------------------------------- |
+| 화면        | React 19 + TypeScript 5.9 | 입력 폼·미리보기·타입 검사      |
+| 개발·빌드   | Vite 7                    | 로컬 개발 서버·정적 번들        |
+| 스타일      | CSS                       | 공통 레이아웃·반응형 스타일     |
+| 아이콘      | lucide-react              | UI 아이콘                       |
+| 데이터 검사 | Zod 4                     | 저장된 작업·JSON 파일 구조 검증 |
+| 테스트      | Node test runner + tsx    | 명령문 생성·저장 호환성 검사    |
+| 코드 형식   | Prettier                  | TSX·CSS·문서 가독성과 형식 통일 |
+
+설치 버전은 `package-lock.json`에 기록합니다. 상태 관리는 React 훅을 사용합니다. 현재는 단일 화면으로, 별도 라우터·전역 상태 라이브러리·인증·DB가 필요하지 않습니다.
+
+## 환경과 시작하기
+
+Node.js **v24.15.0**, npm **11.12.1**의 기존 설치를 확인해 사용했습니다. `.nvmrc`에 Node 버전을 고정했습니다. 별도 환경 변수나 API 키는 필요하지 않습니다.
 
 ```bash
-# nvm 사용 시
+# nvm을 사용하는 경우
 nvm install
 nvm use
 
-# 최초 패키지 설치
-npm install
-
-# 개발 서버
-npm run dev
-```
-
-터미널에 표시되는 주소(기본 `http://127.0.0.1:5173`)를 엽니다. Node는 22.12 이상이 필요하며 `.nvmrc` 버전을 권장합니다. npm 설치에는 레지스트리 네트워크 접근이 필요합니다.
-
-```bash
-npm test         # 생성 규칙과 입력 검증 테스트
-npm run build    # TypeScript 검사 + dist/ 프로덕션 빌드
+npm ci           # lockfile 기준 설치
+npm run dev      # http://127.0.0.1:5173 (사용 중이면 다음 포트)
+npm run build    # 문서 일치 + 타입 검사 + dist/ 빌드
 npm run preview  # 빌드 결과 미리보기
 ```
 
-## 사용 방법
+새 의존성을 추가할 때는 `npm install <패키지>`를 사용하고 `package-lock.json`도 함께 관리합니다. 패키지 설치에는 레지스트리 접근이 필요합니다.
 
-1. **기본 정보**: 상품명, 대상 AI 워크스페이스 기준 상품 폴더, 선택적인 전체 참고 Figma 링크를 입력합니다.
-2. **Figma 디자인**: 섹션 순서/이름과 PC·MO Dev URL을 입력합니다. node-id가 포함된 Figma 노드 링크를 사용합니다. 섹션 체크박스로 생성 범위를 지정하고 필요한 만큼 섹션을 추가합니다.
-3. 기기별 구성은 일반이 기본입니다. `tabs`, `accordion`, `tabs + accordion` 또는 기타 유형을 직접 입력할 수 있습니다. 탭·아코디언은 기기별 그룹과 상태별 링크를 추가합니다. 기타 구성 동작은 추가 요청에 적습니다.
-4. **에셋·버튼**: CDN 기준 경로, RMS 번호, 로컬 폴더, 버튼별 문구·위치·URL·동작을 입력합니다. GTM은 명시적으로 선택한 경우에만 확정값을 포함합니다.
-5. **생성 설정**: 대상 도구와 추가 요청을 정합니다. 기본으로 CQM 가이드·공통규칙 전문을 포함합니다.
-6. 실시간 미리보기와 출력 구조를 확인합니다. 입력 오류를 해결한 후 **전체 명령문 복사** 또는 **.md 다운로드**를 실행합니다.
-7. 대상 AI 작업공간에서 명령문을 붙여넣습니다. 실제 디자인 확인과 제작에는 해당 환경의 Figma MCP 연결과 파일 접근 권한이 필요합니다.
+## 화면 및 기능
 
-입력값은 브라우저 `localStorage`의 `cqm-studio-project-v1`에 저장됩니다. **설정 저장**은 JSON 백업, **불러오기**는 현재 입력을 JSON 내용으로 교체합니다. 중요한 값은 먼저 백업하세요. 초기화는 확인 후 실행합니다. JSON은 구조·버전을 검증하며 2MB까지 받습니다. 브라우저 저장이 제한되면 경고를 표시합니다. 클립보드 권한이 없으면 미리보기를 선택해 수동 복사할 수 있습니다.
+현재 `/`에서 CQM 명령문 생성기를 제공합니다. 사이드바의 원본 문서 안내는 같은 화면에서 열리는 안내 패널이며, 별도 URL은 아직 없습니다.
 
-## 설치한 라이브러리
+| 영역          | 현재 기능                                                                |
+| ------------- | ------------------------------------------------------------------------ |
+| 기본 정보     | 상품명, 작업 폴더, 전체 참고용 Figma 링크                                |
+| Figma 디자인  | 여러 섹션, 실행 대상 선택, PC/MO 독립 구성, 탭·아코디언 상태 링크        |
+| 에셋·버튼     | CDN, RMS, 로컬 에셋, 버튼별 연결, 명시적인 GTM 입력                      |
+| 생성 설정     | 대상 AI, 추가 요청, 제작 가이드 전문 포함 여부                           |
+| 미리보기      | 전체 명령문, 실제 입력 기준 예상 출력 파일, 입력 오류 안내               |
+| 저장·내보내기 | 브라우저 자동 저장, JSON 저장/불러오기, 클립보드 복사, Markdown 다운로드 |
 
-| 구성 | 역할 |
-| --- | --- |
-| React / React DOM 19 | 입력 화면과 실시간 미리보기 |
-| TypeScript 5.9 | 입력 모델과 컴포넌트 타입 검사 |
-| Vite 7 + React 플러그인 | 개발 서버와 정적 번들 빌드 |
-| lucide-react | 인터페이스 아이콘 |
-| Zod 4 | 저장 데이터·가져온 JSON 구조 검증 |
-| tsx + Node test runner | TypeScript 단위 테스트 |
+실제 Figma 접속·상품 HTML 생성은 명령문을 전달받은 AI가 수행합니다. URL 검사는 형식 검사이며 디자인 접근 가능 여부를 확인하지 않습니다. 입력값은 외부 서버로 전송하지 않습니다.
 
-정확한 설치 버전은 `package-lock.json`에 고정됩니다. 외부 폰트·분석 스크립트·API를 사용하지 않으며 사용자 입력은 서버로 보내지 않습니다. 로컬 저장은 암호화되지 않으므로 공용 브라우저에 민감한 내용을 남기지 마세요.
+## 디렉토리 구조
 
-## 원본 문서와 적용 기준
-
-첨부 문서는 **생성 대상 명령문의 자료**로 사용했습니다. 문서 안의 터미널 금지·검증 제한 등을 이 React 프로젝트 개발 지시로 해석하지 않았습니다. 원본은 변경 없이 `docs/source/`에 보관합니다.
-
-- `공통규칙01.md`: 콘텐츠 유형 공통 규칙
-- `CQM_김형윤(1).md`: CQM 제작 가이드, 접근성 기준, 공통 탭 스크립트
-- `CQM명령문_김형윤(1).md`: VAR-00~09와 실행 명령문
-
-`src/data/documents.json`은 원본의 실행 명령문과 두 가이드 전문을 담은 정적 데이터입니다. **프로젝트 시작 시 원본 예시 상품·RMS·Figma 링크를 실제 입력값으로 채우지 않습니다.** 원본에는 AI빌딩넷/테스트AI샘플링, 87589/87551, 과거 U+MDR 적용 문구가 혼재합니다. 생성 요청 맨 앞에 현재 입력 범위가 우선이며 과거 상품 소급 수정 지시는 적용하지 않는다는 기준을 명시했습니다. 가이드 전문은 원문을 보존합니다.
-
-생성 문서의 우선순위는 현재 입력·추가 요청 → 명령문 → CQM 가이드 → 공통규칙입니다. GTM은 기본 미적용이며 명시 선택·확정값 입력 시에만 적용합니다. 가이드의 접근성 예외와 제작 범위 내 에셋 다운로드 규칙은 공통규칙보다 우선합니다. 운영체제나 AI 도구의 강제 권한을 우회하지 않습니다.
-
-전체 명령문은 **입력 변수 + 원본 명령문 + 확정 출력 파일 + (기본) 가이드 전문**입니다. 원본 명령문 내부 `[VAR-xx]`는 앞에 정의된 변수 목록을 참조합니다. 참조용 `@CQM_김형윤.md`는 포함한 전문으로 해석하도록 안내합니다. 전문 포함을 끄면 대상 작업공간에 `CQM_김형윤.md`, `공통규칙.md`가 별도로 있어야 합니다.
-
-## 입력과 출력 규칙
-
-| 변수 | 화면 |
-| --- | --- |
-| VAR-00 / 04 / 05 | 기본 정보의 작업 폴더 / 상품명 / 전체 Figma |
-| VAR-06 | 섹션별 PC·MO 링크, 독립적인 구성 방식, 상태 그룹 |
-| VAR-01 | 버튼 여러 개의 문구·위치·링크·동작 |
-| VAR-02 / 03 / 08 | CDN / 이미지 폴더·RMS / 로컬 에셋 |
-| VAR-07 | 명시적으로 요청한 GTM 확정 블록 |
-| VAR-09 | 체크한 섹션에서 자동 구성한 실행 범위 |
-
-- `기업/상품/상품명` + `1 / 상품 개요` → `기업/상품/상품명/1.상품 개요/pc.html`
-- 한쪽 기기 링크가 없으면 그 기기 파일은 출력 목록에 넣지 않습니다.
-- 상태별 프레임만 입력해도 해당 기기의 출력을 판단합니다. 공통 배치가 실제로 충분한지는 제작 AI가 Figma에서 확인해야 합니다.
-- 탭이나 아코디언 수가 늘어도 섹션별 기기 파일은 하나입니다.
-- 선택한 섹션의 필수값, Figma 호스트·node-id, 중복 폴더·그룹 ID, 잘못된 경로, 상태 링크 누락을 검사합니다.
-- URL 검사는 문법 검사입니다. 실제 Figma 접근 가능 여부나 노드 내용을 보증하지 않습니다.
-- 이미지 폴더와 CDN이 모두 확정되어야 CDN을 사용하며, 부족하면 로컬 상대경로를 사용합니다.
-
-## 파일 구성
+[appresso README의 역할별 디렉토리 구분](https://github.com/brian00uni/appresso#readme)을 참고했습니다. 공통 화면은 `components`, 페이지는 `pages`, 메뉴는 `config`, 공통 훅은 `hooks`에 두고, 콘텐츠 유형별 규칙은 `features`에 추가로 분리했습니다.
 
 ```text
-src/
-  App.tsx               # 단계별 입력 폼, 상태 그룹, 미리보기, 저장/복사
-  style.css             # 반응형 화면
-  model.ts              # Zod 스키마, 기본 모델, 입력 검증
-  prompt.ts             # 순수 명령문 생성과 출력 파일 계산
-  prompt.test.ts        # 실제 생성 규칙의 회귀 테스트
-  data/documents.json   # 원본 명령문과 가이드 데이터
-  main.tsx              # React 진입점
-docs/source/            # 첨부 Markdown 원본
-docs/product-notes.md   # 설계 근거와 확장 아이디어
+commands/
+├── src/
+│   ├── App.tsx                         # 최상위 페이지 연결
+│   ├── main.tsx                        # React 진입점·전역 CSS
+│   ├── components/
+│   │   ├── layout/                     # AppLayout, Header, Sidebar
+│   │   └── ui/                         # Field, Panel, ConfirmDialog, Toast
+│   ├── config/
+│   │   └── navigation.ts               # 공통 사이드바 메뉴 정의
+│   ├── css/
+│   │   ├── fonts.css                   # 로컬 SUIT Variable 웹폰트
+│   │   └── style.css                   # 공통·반응형 스타일
+│   ├── hooks/
+│   │   └── useToast.ts                  # 공통 알림 상태와 타이머
+│   ├── lib/
+│   │   └── browser/download.ts         # 브라우저 파일 다운로드
+│   ├── themes/
+│   │   └── index.tsx                   # MUI 테마·CssBaseline
+│   ├── pages/
+│   │   └── CqmBuilderPage.tsx           # CQM 화면과 공통 레이아웃 조합
+│   └── features/
+│       └── cqm/
+│           ├── index.ts                # 외부에 노출하는 기능 진입점
+│           ├── config.ts               # 단계·저장 키·파일명·용량 제한
+│           ├── components/
+│           │   ├── DashboardSummary.tsx # 현재 입력 기준 작업 요약 카드
+│           │   ├── BuilderHeader.tsx   # 설정 저장·불러오기·초기화 진입
+│           │   ├── SourceNotice.tsx    # 원본 문서 안내
+│           │   ├── PromptPreview.tsx   # 명령문·출력 파일·복사
+│           │   └── steps/              # 기본 정보 / 디자인 / 에셋·버튼 / 설정
+│           ├── hooks/
+│           │   └── useCqmBuilder.ts    # CQM 편집 상태·저장·입출력 제어
+│           ├── model/
+│           │   ├── schema.ts           # Zod 스키마와 타입
+│           │   ├── defaults.ts         # 새 상품·섹션·그룹 기본값
+│           │   ├── selectors.ts        # 폴더명·기기 유무 계산
+│           │   ├── validation.ts       # 입력값 일관성 검사
+│           │   └── index.ts            # 모델 내부 진입점
+│           ├── lib/
+│           │   ├── prompt.ts           # 명령문·출력 파일 생성
+│           │   ├── prompt.test.ts      # 생성 규칙 테스트
+│           │   ├── storage.ts          # 브라우저 저장 읽기·쓰기
+│           │   └── storage.test.ts     # v1 저장 호환성 테스트
+│           └── data/
+│               └── documents.json     # 원본에서 생성한 데이터
+├── docs/
+│   ├── design-system.md               # Mantis 디자인 적용 기준
+│   ├── architecture.md                # 구조와 의존 관계
+│   ├── guides/                        # 사용법·기능 확장 방법
+│   ├── planning/                      # 설계 근거·향후 제안
+│   └── source/
+│       ├── common/                    # 공통규칙 Markdown 원본
+│       └── cqm/                       # CQM 가이드·명령문 원본
+├── scripts/
+│   └── sync-documents.mjs              # 원본 → 앱 데이터 동기화·검사
+├── public/fonts/suit/                 # SUIT Variable WOFF2·SIL OFL 라이선스
+├── .nvmrc                             # Node 버전
+├── .prettierrc.json                    # 코드 형식 규칙
+├── .prettierignore                     # 원본·자동 생성 파일 포맷 제외
+├── package.json / package-lock.json    # 스크립트·의존성
+├── tsconfig.json / vite.config.ts      # 타입 검사·개발 서버 설정
+├── CHANGELOG.md                        # 변경 이력
+└── README.md
 ```
 
-현재 CQM만 지원합니다. 다른 콘텐츠 유형은 별도 입력 모델·명령문 생성기·원본 문서를 추가하는 방식으로 확장할 수 있습니다. 실행 지시와 원본 자료를 분리해 새 문서를 추가할 때 현재 생성 범위를 뜻하지 않는 과거 예시가 섞이지 않도록 유지하세요.
+`dist/`, `node_modules/`, `*.tsbuildinfo`는 Git에서 제외합니다. `public/fonts/suit/`의 폰트와 라이선스는 빌드 시 그대로 배포됩니다.
 
-## 검증 범위
+## 대시보드 디자인
 
-`npm test`는 필수 입력, PC/MO 분리, 선택 범위, 폴더 중복, 상태 링크, 가이드 포함 여부, 예시값 오염 방지, GTM 선택, JSON 구조를 검사합니다. `npm run build`는 타입 검사와 프로덕션 번들 생성을 수행합니다. 실제 상품 HTML 제작이나 Figma 연결 검증은 이 앱의 검증에 포함하지 않습니다.
+[Mantis Free React Admin Template](https://github.com/codedthemes/mantis-free-react-admin-template)의 Vite 레이아웃과 카드·테마 구성을 참고했습니다. 좌측 메뉴(260px/76px), 상단 헤더, 작업 요약 카드 4개, 입력·미리보기 2열로 구성합니다. 작은 화면에서는 메뉴가 드로어로 바뀌고 입력·미리보기가 세로로 배치됩니다. 상세 기준은 [디자인 문서](docs/design-system.md)를 참고하세요.
 
-이번 구현에서 `npm test` 13개와 `npm run build`가 통과했습니다. 로컬 개발 서버 기동과 HTTP 200 응답을 확인한 뒤 검증용 서버를 종료했습니다. 연결 브라우저가 없고 컴퓨터 제어 권한이 없어 실제 화면 렌더링·클릭·모바일 시각 검증은 수행하지 못했습니다. 해당 항목은 미검증이며 로컬 실행 후 확인할 수 있습니다.
+## 데이터 흐름과 호환성
+
+```text
+pages/CqmBuilderPage
+  → features/cqm/hooks/useCqmBuilder
+  → model: 스키마·기본값·검증
+  → lib/prompt: 변수 + 실행 명령문 + 확정 출력 + 선택 가이드
+  → components/PromptPreview: 확인·복사·다운로드
+
+원본 Markdown → documents:sync → data/documents.json
+                          documents:check → 빌드 전 불일치 검사
+```
+
+기존 `cqm-studio-project-v1` 저장 키와 JSON의 `version: 1`을 유지합니다. 구조 변경 전에 저장한 프로젝트를 그대로 읽습니다. 새 필드를 추가할 때는 기존 JSON의 기본값·마이그레이션을 함께 다뤄야 합니다.
+
+## 원본 문서 갱신
+
+원본은 `docs/source/common`과 `docs/source/cqm`에 보관합니다. 앱용 `documents.json`을 직접 편집하지 말고 아래 명령을 사용하세요.
+
+```bash
+npm run documents:sync   # 원본 Markdown을 앱용 JSON으로 갱신
+npm run documents:check  # 원본과 앱 데이터 일치 여부 확인
+```
+
+가이드의 제작 지시는 **생성되는 명령문의 자료**입니다. React 앱 개발 지시로 해석하지 않습니다. 과거 상품 예시는 기본값으로 주입하지 않으며 현재 입력 범위를 우선합니다. 자세한 적용 순서는 [사용 가이드](docs/guides/usage.md)에 설명했습니다.
+
+## 개발 명령과 검증
+
+```bash
+npm test              # 모든 기능의 *.test.ts 자동 검색
+npm run typecheck     # TypeScript 검사
+npm run build         # 문서 일치·타입 검사·프로덕션 빌드
+npm run format        # 코드·관리 문서 포맷 정리 (원본 제외)
+npm run format:check  # 형식 검사
+```
+
+구조 변경 전후의 전체 명령문·출력 목록 일치와 기존 JSON 저장 호환성을 확인합니다. 실제 상품 HTML 제작·Figma 접근·스크린리더 평가는 이 테스트의 범위가 아닙니다. 이번 작업 환경에서는 브라우저 연결·컴퓨터 제어 권한이 없어 시각·클릭 검증은 별도로 필요합니다.
+
+## 다음 기능을 추가할 위치
+
+- **현재 CQM 개선**: `features/cqm` 안의 단계 컴포넌트·모델·생성기를 수정합니다.
+- **블로그 등 새 유형**: `features/<유형>`과 `pages/<유형>BuilderPage`를 추가합니다.
+- **공통 UI**: 여러 유형에 실제로 공통인 기능만 `components/ui`로 올립니다.
+- **메뉴·화면 전환**: 현재 `config/navigation.ts`, `App.tsx`에서 관리하고, 복수 URL이 필요해질 때 라우터를 도입합니다.
+
+아직 구현하지 않은 유형의 메뉴·빈 모듈은 만들지 않았습니다. 단계별 추가 절차와 저장 데이터 변경 방법은 [기능 확장 가이드](docs/guides/extending.md)를 참고하세요.
+
+## 글꼴
+
+[SUIT 공식 배포](https://sun.fo/suit/)의 SUIT Variable을 화면 전체(MUI, 메뉴, 폼, 명령문 미리보기)에 사용합니다. WOFF2 파일을 프로젝트에 포함하므로 실행 중 외부 폰트 CDN을 요청하지 않습니다. 100~900 가변 굵기를 지원하며 `font-display: swap`을 적용했습니다. 원본과 라이선스 정보는 [폰트 안내](public/fonts/suit/README.md)에 기록했습니다.
