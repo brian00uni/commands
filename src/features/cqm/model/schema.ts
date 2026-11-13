@@ -1,4 +1,14 @@
 import { z } from 'zod';
+export const aiToolSchema = z.enum([
+  'Codex',
+  'Claude',
+  'Kiro',
+  'Gemini',
+  'Cursor',
+  'GitHub Copilot',
+  'Windsurf',
+  '기타 AI',
+]);
 export const itemSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -46,7 +56,7 @@ export const projectSchema = z.object({
   tagging: z.boolean(),
   gtm: z.string(),
   includeGuides: z.boolean(),
-  target: z.enum(['Codex', 'Kiro', '기타 AI']),
+  target: aiToolSchema,
   sections: z.array(sectionSchema).min(1),
   buttons: z.array(buttonSchema),
 });

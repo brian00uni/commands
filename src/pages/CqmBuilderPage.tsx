@@ -1,7 +1,8 @@
-import { ArrowLeft, ArrowRight, Clipboard } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronRight, Clipboard } from 'lucide-react';
 import { AppLayout } from '../components/layout/AppLayout';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { Toast } from '../components/ui/Toast';
+import { InputProgress } from '../features/cqm/components/InputProgress';
 import {
   cqmConfig,
   useCqmBuilder,
@@ -55,6 +56,17 @@ export default function CqmBuilderPage() {
               ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
           }}
         />
+        <InputProgress
+          project={project}
+          issueCount={builder.errors.length}
+          currentStep={step}
+          onStep={(next) => {
+            setStep(next);
+            document
+              .getElementById('editor-panel')
+              ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+          }}
+        />
         {docs && <SourceNotice onClose={() => setDocs(false)} />}
         <div className="builder-layout">
           <div className="editor">
@@ -65,24 +77,27 @@ export default function CqmBuilderPage() {
               </div>
               <span className="editor-badge">STEP {step + 1} / 4</span>
             </div>
-            <div className="step-tabs" role="tablist" aria-label="명령문 입력 단계">
+            <nav className="step-tabs" aria-label="명령문 입력 단계">
               {cqmConfig.steps.map((label, i) => (
-                <button
-                  type="button"
-                  key={label}
-                  role="tab"
-                  aria-selected={step === i}
-                  aria-controls="editor-panel"
-                  id={`step-${i}`}
-                  onClick={() => setStep(i)}
-                  className={step === i ? 'current' : ''}
-                >
-                  <span className="step-num">{i + 1}</span>
-                  {label}
-                </button>
+                <div className="stepper-step" key={label}>
+                  <button
+                    type="button"
+                    aria-current={step === i ? 'step' : undefined}
+                    aria-controls="editor-panel"
+                    id={`step-${i}`}
+                    onClick={() => setStep(i)}
+                    className={step === i ? 'current' : ''}
+                  >
+                    <span className="step-num">{i + 1}</span>
+                    <span className="step-label">{label}</span>
+                  </button>
+                  {i < cqmConfig.steps.length - 1 && (
+                    <ChevronRight className="step-connector" size={18} aria-hidden="true" />
+                  )}
+                </div>
               ))}
-            </div>
-            <div id="editor-panel" role="tabpanel" aria-labelledby={`step-${step}`}>
+            </nav>
+            <div id="editor-panel" role="region" aria-labelledby={`step-${step}`}>
               {step === 0 && <BasicInfoStep project={project} change={change} />}
               {step === 1 && (
                 <DesignStep

@@ -83,6 +83,7 @@ export function AssetsButtonsStep({ project, change }: Props) {
                 <Field
                   key={key}
                   label={label}
+                  required={key !== 'location'}
                   value={b[key]}
                   onChange={(v) =>
                     change(
@@ -120,6 +121,7 @@ export function AssetsButtonsStep({ project, change }: Props) {
         {project.tagging && (
           <Field
             label="확정된 영역별 GTM 태깅"
+            required
             hint="VAR-07 · 샘플값은 자동으로 채우지 않습니다."
             value={project.gtm}
             onChange={(v) => change('gtm', v)}

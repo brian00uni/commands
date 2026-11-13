@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { cqmConfig } from '../config';
-import { emptyProject } from '../model';
+import { aiToolSchema, emptyProject, projectSchema } from '../model';
+import { generatePrompt } from './prompt';
 import { loadProject, saveProject } from './storage';
 function memoryStorage(initial?: string) {
   const values = new Map<string, string>();
@@ -47,4 +48,16 @@ test('저장 접근 실패를 호출자에게 전달한다', () => {
       ),
     /storage blocked/,
   );
+});
+
+test('모든 AI 도구 선택값은 저장·불러오기와 명령문에 유지된다', () => {
+  for (const target of aiToolSchema.options) {
+    const project = { ...emptyProject(), target };
+    const imported = projectSchema.parse(JSON.parse(JSON.stringify(project)));
+    const storage = memoryStorage();
+    saveProject(storage, imported);
+    const restored = loadProject(storage);
+    assert.equal(restored.target, target);
+    assert.ok(generatePrompt(restored).startsWith(`# CQM 상품 제작 요청 · ${target}\n`));
+  }
 });

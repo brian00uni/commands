@@ -37,7 +37,7 @@ export function DashboardSummary({ project, fileCount, issueCount, onDesign, onI
       suffix: '개',
       note: '디자인이 제공된 PC · MO 기준',
       icon: FileCode2,
-      tone: 'green',
+      tone: 'info',
       badge: 'HTML',
       action: onDesign,
     },
@@ -47,7 +47,7 @@ export function DashboardSummary({ project, fileCount, issueCount, onDesign, onI
       suffix: '개',
       note: '선택 섹션의 고유 Figma URL',
       icon: Link2,
-      tone: 'purple',
+      tone: 'orange',
       badge: 'Figma',
       action: onDesign,
     },
@@ -57,7 +57,7 @@ export function DashboardSummary({ project, fileCount, issueCount, onDesign, onI
       suffix: '개',
       note: issueCount ? '필수 입력과 링크를 확인하세요' : '전체 명령문을 복사할 수 있어요',
       icon: ListChecks,
-      tone: issueCount ? 'orange' : 'green',
+      tone: issueCount ? 'danger' : 'green',
       badge: issueCount ? '입력 중' : '준비 완료',
       action: onIssues,
     },
@@ -66,7 +66,7 @@ export function DashboardSummary({ project, fileCount, issueCount, onDesign, onI
     <section className="dashboard-summary" aria-label="현재 작업 요약">
       {cards.map((c) => (
         <Card key={c.title} className={`stat-card tone-${c.tone}`}>
-          <CardContent sx={{ p: '20px !important' }}>
+          <CardContent>
             <div className="stat-title">
               <span>{c.title}</span>
               <c.icon size={18} />

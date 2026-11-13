@@ -51,7 +51,7 @@ export function PromptPreview({
         </span>
         <div>
           <h2>명령문 미리보기</h2>
-          <p>입력한 내용이 실시간으로 반영됩니다.</p>
+          <p>실시간 반영 · 확인 후 복사</p>
         </div>
         <span className="live-badge">
           <span /> LIVE
@@ -136,9 +136,7 @@ export function PromptPreview({
         >
           {ready ? <CheckCheck size={16} /> : <span className="validation-dot" />}
           <span>
-            {ready
-              ? '필수 입력 완료 · 복사할 준비가 되었어요'
-              : `필수 입력을 확인해 주세요 · ${errors.length}개`}
+            {ready ? '입력 완료 · 복사 가능' : `필수 입력을 확인해 주세요 · ${errors.length}개`}
           </span>
           <ChevronRight size={14} />
         </button>

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { Drawer, useMediaQuery, useTheme } from '@mui/material';
-import { ChevronRight, Home } from 'lucide-react';
+// 브레드크럼 복원 시 함께 활성화하세요.
+// import { ChevronRight, Home } from 'lucide-react';
 import { Sidebar } from './Sidebar';
 import type { SidebarProps } from './Sidebar';
 import { Header } from './Header';
@@ -50,6 +51,7 @@ export function AppLayout({ children, pageTitle, saved, ...sidebar }: Props) {
           onHelp={() => navigate('documents')}
         />
         <main id="main-content" tabIndex={-1}>
+          {/* 브레드크럼: 필요 시 아래 주석을 해제해 복원합니다.
           <nav className="breadcrumb" aria-label="현재 위치">
             <Home size={14} />
             <span>워크스페이스</span>
@@ -58,6 +60,7 @@ export function AppLayout({ children, pageTitle, saved, ...sidebar }: Props) {
             <ChevronRight size={13} />
             <strong>명령문 대시보드</strong>
           </nav>
+          */}
           {children}
           <footer className="page-footer">
             <span>

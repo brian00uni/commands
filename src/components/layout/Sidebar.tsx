@@ -1,4 +1,4 @@
-import { Code2, ChevronRight, FolderClosed, HardDrive, BookOpen } from 'lucide-react';
+import { Code2, ChevronRight, FolderClosed, ShieldCheck, BookOpen } from 'lucide-react';
 import { Tooltip } from '@mui/material';
 import { navigation } from '../../config/navigation';
 import type { NavigationId } from '../../config/navigation';
@@ -78,12 +78,12 @@ export function Sidebar({ title, subtitle, active, collapsed = false, onNavigate
           </button>
         </div>
       </div>
-      <div className="sidebar-bottom">
-        <HardDrive size={18} />
+      <div className="sidebar-bottom" title="브라우저에 안전하게 저장 · 외부 서버 전송 없음">
+        <ShieldCheck size={32} aria-hidden="true" />
         <span>
-          브라우저에 안전하게 저장<small>외부 서버 전송 없음</small>
+          <strong>브라우저에 안전하게 저장</strong>
+          <small>외부 서버 전송 없음</small>
         </span>
-        <span className="status-dot" />
       </div>
     </aside>
   );

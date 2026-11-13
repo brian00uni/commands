@@ -2,7 +2,7 @@ import { ShieldCheck } from 'lucide-react';
 import { Field } from '../../../../components/ui/Field';
 import { Panel } from '../../../../components/ui/Panel';
 import type { CqmBuilderController } from '../../hooks/useCqmBuilder';
-import type { Project } from '../../model';
+import { aiToolSchema, type Project } from '../../model';
 type Props = Pick<CqmBuilderController, 'project' | 'change'>;
 export function GenerationSettingsStep({ project, change }: Props) {
   return (
@@ -12,14 +12,18 @@ export function GenerationSettingsStep({ project, change }: Props) {
       description="추가 요구사항과 명령문에 포함할 문서를 선택하세요."
     >
       <label className="field">
-        <span>사용할 AI 도구</span>
+        <span>
+          사용할 AI 도구 <span className="field-badge is-optional">기본값: Codex</span>
+        </span>
         <select
           value={project.target}
           onChange={(e) => change('target', e.target.value as Project['target'])}
         >
-          <option>Codex</option>
-          <option>Kiro</option>
-          <option>기타 AI</option>
+          {aiToolSchema.options.map((tool) => (
+            <option key={tool} value={tool}>
+              {tool}
+            </option>
+          ))}
         </select>
         <small>같은 CQM 기준을 사용합니다. 대상 도구에서 Figma MCP 연결이 필요합니다.</small>
       </label>

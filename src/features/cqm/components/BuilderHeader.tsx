@@ -27,11 +27,12 @@ export function BuilderHeader({ project, importRef, importFile, setReset }: Prop
         </button>
         <button
           type="button"
-          className="icon-button"
+          className="button reset-button"
           aria-label="입력 초기화"
           onClick={() => setReset(true)}
         >
           <RotateCcw size={17} />
+          초기화
         </button>
         <input
           ref={importRef}
